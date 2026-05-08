@@ -6,7 +6,7 @@
   // Students get a ~30s pull instead of a 5-10 min build.
   // To rebuild (e.g. after changing the Dockerfile), push to main — the
   // workflow will update the image automatically.
-  "image": "ghcr.io/StefanoBerlato/tamarin-devcontainer:latest",
+  "image": "ghcr.io/stefanoberlato/tamarin-devcontainer:latest",
 
   // Uncomment this block (and remove the "image" line above) for local Dockerfile builds:
   // "build": {

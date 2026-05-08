@@ -24,7 +24,7 @@ A ready-to-use development environment for Tamarin, designed for courses and wor
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/StefanoBerlato/tamarin-devcontainer.git
+   git clone https://github.com/stefanoberlato/tamarin-devcontainer.git
    cd tamarin-devcontainer
    ```
 2. Open the folder in VS Code:
