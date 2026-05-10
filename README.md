@@ -52,18 +52,10 @@ Features:
 To start the interactive web interface, open the integrated terminal and run:
 
 ```bash
-tamarin-prover interactive examples/hello_bob.spthy
+tamarin-prover interactive examples/<file_name>.spthy
 ```
 
-The web UI will be available on port 3000. In Codespaces, click the **Ports** tab in the bottom panel, find port 3000 (labeled "Tamarin Web Interface"), and click the globe icon to open it in your browser.
-
-### Checking from the terminal
-
-You can also run Tamarin in batch mode from the integrated terminal:
-
-```bash
-tamarin-prover prove examples/hello_bob.spthy
-```
+The web UI will be available on port 3000 (or 3001). Then, either look at the Ports panel (bottom of VS Code) and click the globe icon to open it in your browser, or follow the link returned in the terminal (usually, `http://127.0.0.1:3000` or `http://127.0.0.1:3001`) with CTRL+click.
 
 ## For instructors: customising the environment
 
@@ -75,7 +67,7 @@ tamarin-prover prove examples/hello_bob.spthy
 │   ├── devcontainer.json   # Codespaces configuration
 │   └── Dockerfile          # Container image definition
 └── examples/
-    └── hello_bob.spthy     # Starter file for students
+    └── *.spthy             # Tamaring files
 ```
 
 ### Adding course material

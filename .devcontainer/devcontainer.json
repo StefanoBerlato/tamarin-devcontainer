@@ -61,5 +61,5 @@
 
   // Post-create: nothing needed.
 
-  "postStartCommand": "echo 'Tamarin environment ready. Open any .spthy file in VS Code, or run `tamarin-prover interactive` in the terminal and open port 3000 in the browser.'"
+  "postStartCommand": "echo 'Tamarin environment ready. Open any .spthy file in VS Code and start modeling. To start Tamarin on a file <file_name>.spthy, run `tamarin-prover interactive <file_name>.spthy` in the terminal; then, either look at the Ports panel (bottom of VS Code) or follow the link returned in the terminal (usually, `http://127.0.0.1:3000` or `http://127.0.0.1:3001`) with CTRL+click.'"
 }
