@@ -1,0 +1,38 @@
+/*
+  Tamarin files have the 
+  .spthy extension, standing
+  for "security protocol theory"
+
+  A Tamarin model comprises:
+  1. the model's name and "begin"
+  2. the declaration of the set of cryptographic primitives the protocol uses
+  3. the multiset rewriting rules that model the protocol
+  4. the lemmas defining the security properties to be proven
+  5. "end"
+*/
+
+
+
+// Step 1 – Specify the theory name and "begin"
+theory FeedBobTheCat
+begin
+
+
+
+// Step 2 – Define builtins (like importing libraries)
+// TODO: <what builtins do we need?>
+
+
+
+// Step 3 – Define (multiset rewriting) rules
+// TODO: <what rules do we need?>
+
+
+
+// Step 4 – Define lemmas (written in basic math notation over traces of the action facts)
+// TODO: <what security properties do we want to investigate?>
+
+
+
+// Step 5 – "end"
+end

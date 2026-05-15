@@ -1,0 +1,295 @@
+/*
+  Tamarin files have the 
+  .spthy extension, standing
+  for "security protocol theory"
+
+  A Tamarin model comprises:
+  1. the model's name and "begin"
+  2. the declaration of the set of cryptographic primitives the protocol uses
+  3. the multiset rewriting rules that model the protocol
+  4. the lemmas defining the security properties to be proven
+  5. "end"
+*/
+
+
+
+// Step 1 – Specify the theory name and "begin"
+theory FeedBobTheCat
+begin
+
+
+
+// Step 2.1 – Define builtins (like importing libraries)
+// the hashing builtin provides:
+// - a unary function h, denoting a cryptographic hash function
+// the asymmetric-encryption builtin provides:
+// - a binary function aenc denoting the asymmetric encryption algorithm
+// - a binary function adec denoting the asymmetric decryption algorithm
+// - a unary function pk denoting the public key corresponding to a private key
+// - the equation adec(aenc(m, pk(sk)), sk) = m
+// the signing builtin provides:
+// - a binary function sign denoting the signature generation algorithm
+// - a ternary function verify denoting the signature verification algorithm
+// - a unary function pk denoting the public key corresponding to a private key
+// - the constant "true"
+// - the equation verify(sign(m,sk),m,pk(sk)) = true
+builtins: hashing, asymmetric-encryption, signing
+
+// Step 2.2 – Define new functions
+// (commented because no new functions are present in this model)
+// functions:
+// 
+// Tamarin automatically adds functions to manage pairs
+// functions: fst/1, pair/2, snd/1
+// Then, just as an example, the asymmetric-encryption builtins has the following functions:
+// functions: adec/2, aenc/2, pk/1
+// and the hashing builtins has the following functions:
+// functions: h/1
+// and the signing builtins has the following functions:
+// functions: sign/2, verify/3, pk/1
+//
+// Note that Tamarin also supports private functions, which
+// cannot be applied by the adversary. For instance, private
+// functions can be used to model functions that implicitly
+// use some secret that is shared between all (honest) users.
+// To make a function private, simply add the attribute [private]
+// after the function declaration
+
+// Step 2.3 – Define equations for modeling properties of functions
+// (commented because no new equations are present in this model)
+// (equations are also referred to as "equational theories")
+// equations: 
+// 
+// Tamarin automatically adds equations to manage pairs
+// equations:
+//    fst(<x.1, x.2>) = x.1,
+//    snd(<x.1, x.2>) = x.2
+// Then, just as an example, the asymmetric-encryption builtins has the following equations:
+// equations:
+//    adec(aenc(x.1, pk(x.2)), x.2) = x.1
+// and the signing builtins has the following equations:
+// equations:
+//    verify(sign(m,sk),m,pk(sk)) = true
+//
+// Note that, in an equation, there are no public constants
+// and all terms on the right hand side must also appear 
+// on the left hand side. The definition of an equation has
+// an impact on Tamarin's efficiency (see the manual on the
+// subject of "convergent equational theories that have the 
+// finite variant property" and "subtermconvergent equations"
+
+
+
+// Step 3 – Define (multiset rewriting) rules
+
+// Some hard (built-in) facts (note they start with an uppercase letter):
+// - Out(·): the message "·" is sent on the public channel
+// - In(·): the message "·" is received from the public channel
+// - Fr(·): freshly generate "·" (may be a nonce or a key)
+// - K(·): the adversary knows "·"
+
+// Facts can be seen as predicates storing state information
+
+// The 3 rules below are a standard modeling of a PKI
+// (standard = suggested by the authors of Tamarin)
+// Facts with "!" are persistent (i.e., are not consumed)
+// The symbol "$A" represents a public name
+// This rule models the registration of a public key
+rule Register_PK:
+    [ Fr(~ltk) ]
+  -->
+    [ 
+      !Ltk($A, ~ltk),
+      !Pk($A, pk(~ltk))
+    ]
+
+// This rule allows the adversary to retrieve any public key
+rule Get_PK:
+    [ !Pk(A, pubkey) ]
+  -->
+    [ Out(pubkey) ]
+
+// This rule models the dynamic compromise of long-term private keys
+// and has an action fact we can use in lemmas (e.g., to say that if
+// a leak happens then it must be because a private key was leaked )
+rule Reveal_LTK:
+    [ !Ltk(A, ltk) ]
+  --[ LtkReveal(A) ]->
+    [ Out(ltk) ]
+
+
+// This role models Alice sending an encrypted message (a fresh fish) to Bob the Cat
+// Remember that, although we can name rules after participants and cluster rules by 
+// role, clustering is only a matter of display, they do not affect Tamarin reasoning
+rule Alice_1[role="Feeder"]:
+    [
+      Fr(~fish),
+      !Pk($B, pkB_enc)
+    ]
+  --[ Alice_sent_Fish($B, ~fish) ]->
+    [ 
+      Memory_Alice_1($B, ~fish),
+      Out(<'1', aenc(~fish, pkB_enc)>)  // <x,y> is syntactic sugar for pair(x,y)
+    ]
+
+// This rule models Bob the Cat's answer to Alice (a signed hash of the decrypted message)
+rule Bob_the_Cat_1[role="Eater"]:
+    // You can give names – that is, define "local macros" – to complex/recurrent terms in a rule
+    // You may also have global macros for the whole theory
+    let
+      dec_fish = adec(enc_fish, ~ltkB_dec)
+    in 
+    [
+      !Ltk($B, ~ltkB_dec),
+      !Ltk($B, ~ltkB_sign),
+      In(enc_fish)
+    ]
+  --[ Bob_the_Cat_Sent_Ack($B, dec_fish) ]->
+    [ Out(<'2', sign(h(dec_fish), ~ltkB_sign)>) ]
+
+// This rule models Alice receiving (and verifying) Bob the Cat's acknowledgment
+rule Alice_2[role="Feeder"]:
+    [ 
+      Memory_Alice_1(B, fish),
+      !Pk(B, pkB_ver),
+      In(ack_fish)
+    ]
+  --[ 
+      Eq(verify(ack_fish, h(fish), pkB_ver), true),
+      Alice_Received_Ack(B, fish)
+    ]->
+    []
+
+
+
+// Step 4 – Define lemmas (using first-order logic formulas over action facts and timepoints)
+// We want to model fish secrecy, fish integrity, and ack authenticity (non-injective agreement)
+// For this protocol, we do not require freshness, unlinkability, equivalence, forward/backward secrecy
+
+// SANITY CHECK:
+// To ensure that our lemmas do not just hold vacuously because the model is not executable,
+// we also include an executability lemma that shows that the model can run to completion.
+// This is given as a regular lemma, but with the exists-trace keyword
+lemma Alice_feeds_Bob_the_Cat_honest:
+  exists-trace
+  " Ex B fish #i.
+        Alice_Received_Ack(B, fish) @ #i
+      & not(Ex #r. LtkReveal(B) @ #r)
+  "
+
+// FISH SECRECY:
+// It cannot be that Alice sent Bob the Cat the fish and the adversary
+// knows the fish without having leaked Bob the Cat's long-term private key
+lemma Alice_fish_secrecy:
+  "
+    not(                                  // It cannot be that a
+      Ex B fish #i #j                     // there exist B, fish (#i and #j are temporal)
+      .                                   // such that
+        Alice_sent_Fish(B, fish) @ #i     // Alice sent Bob the Cat the fish at time #i
+        & K(fish) @ #j                    // and the adversary knows the fish at time #j
+        & not(Ex #r . LtkReveal(B) @ #r)  // without having leaked Bob the Cat's long-term private key at time #r
+    )
+  "
+
+// FISH INTEGRITY
+// This lemma fails, simply because the  
+// adversary drops Alice's message and
+// sends their own instead
+lemma Alice_fish_integrity_1:
+  "
+    ( All B fish1 fish2 #i #j               // For all B and pair of fishes (#i and #j are temporal)
+      .                                     // such that
+      Alice_sent_Fish(B, fish1) @ #i        // Alice sent fish1 to B at time #i
+      &                                     // AND
+      Bob_the_Cat_Sent_Ack(B, fish2) @ #j   // B received and acknowledged fish2 at time #j
+      &                                     // AND
+      #i < #j                               // Alice sent the fish before B sent the ack
+       ==>                                  // it must hold that
+       fish1 = fish2                        // fish1 = fish2
+    )
+  "
+
+// FISH INTEGRITY
+// This lemma fails, simply because the  
+// adversary drops Alice's message
+lemma Alice_fish_integrity_2:
+  "
+    ( All B fish1  #i                       // For all B and fish1 (#i is temporal)
+      .                                     // such that
+      Alice_sent_Fish(B, fish1) @ #i        // Alice sent fish1 to B at time #i
+      ==> (                                 // it must hold that
+        Ex fish2 #j                         // there exists a fish2 at time #j
+        .                                   // such that
+        Bob_the_Cat_Sent_Ack(B, fish2) @ #j // B received and acknowledged fish2 at time #j
+        &                                   // AND
+        #i < #j                             // #i < #j
+        &                                   // AND
+        fish1 = fish2                       // fish1 = fish2
+      )
+    )
+  "
+
+// FISH AUTHENTICITY
+// This lemma fails, simply because Alice 
+// is not authenticated toward Bob the Cat
+lemma Alice_fish_authenticity:
+  "
+    ( All B fish #i                         // For all B, fish
+      .                                     // such that
+      Bob_the_Cat_Sent_Ack(B, fish) @ #i    // B received and acknowledged fish at time #a
+       ==>                                  // it must hold that
+       ( (Ex #a                             // there exists a moment #a
+          .                                 // such that 
+          Alice_sent_Fish(B, fish) @ #a     // Alice sent fish to B at time #a 
+          &                                 // AND
+          #a < #i                           // #a < #i
+         )
+       |                                    // OR
+       (Ex #r. LtkReveal(B) @ #r            // the adversary performed a long-term key reveal on B
+        & r < i)                            // before Bob sent the ack for fish at time #i
+       )
+    )
+  "
+
+// ACK AUTHENTICITY
+// The lemma below models the strong (but not the strongest) authenticity
+// by relying on the definition of non-injective agreement
+lemma Bob_the_Cat_ack_authenticity:
+  "
+    ( All B fish #i                           // For all B, fish
+      .                                       // such that
+      Alice_Received_Ack(B, fish) @ #i        // Alice received an ack from B for fish at time #i
+       ==>                                    // it must hold that
+       ( (Ex #a                               // there exists a moment #a
+          .                                   // such that 
+          Bob_the_Cat_Sent_Ack(B, fish) @ #a  // B received and acknowledged fish at time #a
+          &                                   // AND
+          #a < #i                             // #a < #i
+
+          // IF YOU ADD THIS PART BELOW, YOU GET INJECTIVE AGREEMENT
+          // &                                 // AND
+          // (All #j                           // in all possible moment #j
+          //  .                                // such that
+          //  Alice_Received_Ack(B, fish) @ #j // Alice received an ack from B for fish
+          //   ==>                             // it implies that
+          //   #i = #j)                        // #i = #j
+
+         )
+       |                                      // OR
+       (Ex #r. LtkReveal(B) @ #r              // the adversary performed a long-term key reveal on B
+        & r < i)                              // before Alice received the ack from B for fish at time #i
+       )
+    )
+  "
+
+// In the above protocol, Alice verifies the signature of Bob the Cat's answer.
+// We model this by considering only those traces of the protocol in which the
+// application of the verify function to Bob the Cat's answer equals the constant
+// true. To this end, we specify the equality restriction
+restriction Equality:
+"All x y #i. Eq(x,y) @ #i ==> x = y"
+
+
+
+// Step 5 – "end"
+end
