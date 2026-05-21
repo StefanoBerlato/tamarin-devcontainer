@@ -76,7 +76,7 @@ builtins: hashing, asymmetric-encryption, signing
 // on the left hand side. The definition of an equation has
 // an impact on Tamarin's efficiency (see the manual on the
 // subject of "convergent equational theories that have the 
-// finite variant property" and "subtermconvergent equations"
+// finite variant property" and "subtermconvergent equations")
 
 
 
@@ -111,7 +111,7 @@ rule Get_PK:
 
 // This rule models the dynamic compromise of long-term private keys
 // and has an action fact we can use in lemmas (e.g., to say that if
-// a leak happens then it must be because a private key was leaked )
+// a leak happens then it must be because a private key was leaked)
 rule Reveal_LTK:
     [ !Ltk(A, ltk) ]
   --[ LtkReveal(A) ]->
