@@ -291,7 +291,8 @@ lemma Bob_the_Cat_ack_authenticity:
 // In the above protocol, Alice verifies the signature of Bob the Cat's answer.
 // We model this by considering only those traces of the protocol in which the
 // application of the verify function to Bob the Cat's answer equals the constant
-// true. To this end, we specify the equality restriction
+// true. To this end, we specify the equality restriction. Without this restriction,
+// the lemma Bob_the_Cat_ack_authenticity fails!
 restriction Equality:
 "All x y #i. Eq(x,y) @ #i ==> x = y"
 
