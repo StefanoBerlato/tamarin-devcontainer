@@ -154,7 +154,7 @@ rule Alice_2[role="Feeder"]:
     [ 
       Memory_Alice_1(B, fish),
       !Pk(B, pkB_ver),
-      In(ack_fish)
+      In(<'2', ack_fish>)
     ]
   --[ 
       Eq(verify(ack_fish, h(fish), pkB_ver), true),
