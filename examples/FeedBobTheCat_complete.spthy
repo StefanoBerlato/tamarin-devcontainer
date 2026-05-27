@@ -9,6 +9,8 @@
   3. the multiset rewriting rules that model the protocol
   4. the lemmas defining the security properties to be proven
   5. "end"
+
+  useful chars: < >
 */
 
 
@@ -192,9 +194,12 @@ lemma Alice_fish_secrecy:
   "
 
 // FISH INTEGRITY
-// This lemma fails, simply because the  
-// adversary drops Alice's message and
-// sends their own instead
+// This lemma models integrity incorrectly:
+// Alice may have sent multiple fishes, 
+// so you may actually have a pair (fish1, fish2)
+// sent by Alice and received by Bob (so you 
+// have Bob_the_Cat_Sent_Ack(B, fish2) and
+// Alice_sent_Fish(B, fish1)
 lemma Alice_fish_integrity_1:
   "
     ( All B fish1 fish2 #i #j               // For all B and pair of fishes (#i and #j are temporal)
@@ -211,7 +216,8 @@ lemma Alice_fish_integrity_1:
 
 // FISH INTEGRITY
 // This lemma fails, simply because the  
-// adversary drops Alice's message
+// adversary drops Alice's message. Again,
+// this is an incorrect modeling
 lemma Alice_fish_integrity_2:
   "
     ( All B fish1  #i                       // For all B and fish1 (#i is temporal)

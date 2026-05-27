@@ -9,6 +9,8 @@
   3. the multiset rewriting rules that model the protocol
   4. the lemmas defining the security properties to be proven
   5. "end"
+
+  useful chars: < >
 */
 
 
